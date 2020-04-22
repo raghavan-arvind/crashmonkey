@@ -52,50 +52,50 @@ stat_opt='-c  %n - blocks: %b size: %s inode: %i links: %h'
 # Rename wraps 'mv' except that 'rename A/ B/'
 # would replace B, instead of creating A/B
 rename() {
-    [ -d $1 ] && [ -d $2 ] && rm -rf $2
-    mv $1 $2
+	[ -d $1 ] && [ -d $2 ] && rm -rf $2
+	mv $1 $2
 }
 
 # Usage: general_stat [--data-only] file1 [--data-only] [file2] ..
 # If the --data-only flag precedes a file, then only that file's
 # data will be printed.
 general_stat() {
-    data_only="false"
-    while (( "$#" )); do
-        case $1 in
-            --data-only)
-                data_only="true"
-                ;;
-            *)
-                local file="$1"
-                echo "-- $file --"
-                if [ ! -f "$file" ] && [ ! -d "$file" ]; then
-                    echo "Doesn't exist!"
-                elif [ "$data_only" = "true" ] && [ -d "$file" ]; then
-                    # Directory with --data-only
-                    echo "Directory Data"
-                    [[ -z "$(ls -A $file)" ]] || ls -1 "$file" | sort
-                elif [ "$data_only" = "true" ]; then
-                    # File with --data-only
-                    echo "File Data"
-                    od "$file"
-                elif [ -d "$file" ]; then
-                    # Directory with metadata and data
-                    echo "Directory Metadata"
-                    stat "$stat_opt" "$file"
-                    echo "Directory Data"
-                    [[ -z "$(ls -A $file)" ]] || ls -1 "$file" | sort
-                else
-                    # File with metadata and data
-                    echo "File Metadata"
-                    stat "$stat_opt" "$file"
-                    echo "File Data"
-                    od "$file"
-                fi
-                data_only="false"
-                ;;
-        esac
-        shift
+	data_only="false"
+	while (( "$#" )); do
+		case $1 in
+			--data-only)
+				data_only="true"
+				;;
+			*)
+				local file="$1"
+				echo "-- $file --"
+				if [ ! -f "$file" ] && [ ! -d "$file" ]; then
+					echo "Doesn't exist!"
+				elif [ "$data_only" = "true" ] && [ -d "$file" ]; then
+					# Directory with --data-only
+					echo "Directory Data"
+					[[ -z "$(ls -A $file)" ]] || ls -1 "$file" | sort
+				elif [ "$data_only" = "true" ]; then
+					# File with --data-only
+					echo "File Data"
+					od "$file"
+				elif [ -d "$file" ]; then
+					# Directory with metadata and data
+					echo "Directory Metadata"
+					stat "$stat_opt" "$file"
+					echo "Directory Data"
+					[[ -z "$(ls -A $file)" ]] || ls -1 "$file" | sort
+				else
+					# File with metadata and data
+					echo "File Metadata"
+					stat "$stat_opt" "$file"
+					echo "File Data"
+					od "$file"
+				fi
+				data_only="false"
+				;;
+		esac
+		shift
 	done
 }
 
@@ -141,85 +141,85 @@ clean_dir()
 }
 
 ensure_file_size_one_block() {
-    size=$(stat -c %s $1)
-    [[ size -lt 4192 ]] && _pwrite_byte 0x22 0 32768 $1 > /dev/null
+	size=$(stat -c %s $1)
+	[[ size -lt 4192 ]] && _pwrite_byte 0x22 0 32768 $1 > /dev/null
 }
 
 translate_range() {
-    size=$(stat -c %s $1)
-    case $2 in
-        append)
-            offset=$size
-            length=$((offset + 32768))
-        ;;
-        overlap_unaligned_start)
-            offset=0
-            length=5000
-        ;;
-        overlap_unaligned_end)
-            offset=$((size - 5000))
-            length=5000
-        ;;
-        overlap_start)
-            offset=0
-            length=8192
-        ;;
-        overlap_end)
-            offset=$((size - 8192))
-            length=8192
-        ;;
-        overlap_extend)
-            offset=$((size - 2000))
-            length=5000
-        ;;
-    esac
-    echo $offset $length
+	size=$(stat -c %s $1)
+	case $2 in
+		append)
+			offset=$size
+			length=$((offset + 32768))
+		;;
+		overlap_unaligned_start)
+			offset=0
+			length=5000
+		;;
+		overlap_unaligned_end)
+			offset=$((size - 5000))
+			length=5000
+		;;
+		overlap_start)
+			offset=0
+			length=8192
+		;;
+		overlap_end)
+			offset=$((size - 8192))
+			length=8192
+		;;
+		overlap_extend)
+			offset=$((size - 2000))
+			length=5000
+		;;
+	esac
+	echo $offset $length
 }
 
 do_falloc() {
-    local file="$1"
-    local mode="$2"
-    local range="$3"
+	local file="$1"
+	local mode="$2"
+	local range="$3"
 
-    size=$(stat -c %s $file)
-    read offset length <<< $(translate_range $file $range)
+	size=$(stat -c %s $file)
+	read offset length <<< $(translate_range $file $range)
 
-    case $mode in
-        FALLOC_FL_ZERO_RANGE)
-            $XFS_IO_PROG -f -c "fzero $offset $length" $file
-        ;;
-        FALLOC_FL_ZERO_RANGE|FALLOC_FL_KEEP_SIZE)
-            $XFS_IO_PROG -f -c "fzero -k $offset $length" $file
-        ;;
-        FALLOC_FL_PUNCH_HOLE|FALLOC_FL_KEEP_SIZE)
-            $XFS_IO_PROG -f -c "fpunch $offset $length" $file
-        ;;
-        FALLOC_FL_KEEP_SIZE)
-            $XFS_IO_PROG -f -c "falloc -k $offset $length" $file
-        ;;
-        0)
-            $XFS_IO_PROG -f -c "falloc $offset $length" $file
-        ;;
-    esac
+	case $mode in
+		FALLOC_FL_ZERO_RANGE)
+			$XFS_IO_PROG -f -c "fzero $offset $length" $file
+		;;
+		FALLOC_FL_ZERO_RANGE|FALLOC_FL_KEEP_SIZE)
+			$XFS_IO_PROG -f -c "fzero -k $offset $length" $file
+		;;
+		FALLOC_FL_PUNCH_HOLE|FALLOC_FL_KEEP_SIZE)
+			$XFS_IO_PROG -f -c "fpunch $offset $length" $file
+		;;
+		FALLOC_FL_KEEP_SIZE)
+			$XFS_IO_PROG -f -c "falloc -k $offset $length" $file
+		;;
+		0)
+			$XFS_IO_PROG -f -c "falloc $offset $length" $file
+		;;
+	esac
 }
 
 do_fsync_check() {
-    # If file does not exist (i.e. it was removed), fsync
-    # the parent instead.
+	# If file does not exist (i.e. it was removed), fsync
+	# the parent instead.
 
-    if [[ -e "$1" ]]; then
-        file="$1"
-    else
-        file="$(dirname $1)"
-    fi
+	if [[ -e "$1" ]]; then
+		file="$1"
+	else
+		file="$(dirname $1)"
+	fi
 
-    if [[ $2 == "fdatasync" ]]; then
-        $XFS_IO_PROG -c "fdatasync" $file
-        check_consistency --data-only $file
-    else
-        $XFS_IO_PROG -c "fsync" $file
-        check_consistency $file
-    fi
+	if [[ $2 == "fdatasync" ]]; then
+		$XFS_IO_PROG -c "fdatasync" $file
+		check_consistency --data-only $file
+	else
+		$XFS_IO_PROG -c "fsync" $file
+		check_consistency $file
+	fi
 }
 
 # Test cases
