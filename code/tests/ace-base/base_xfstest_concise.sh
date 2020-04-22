@@ -1,4 +1,4 @@
-#!/bin/bash
+#! /bin/bash
 # SPDX-License-Identifier: GPL-2.0
 # Copyright (c) $CURRENT_YEAR The University of Texas at Austin.  All Rights Reserved.
 #
@@ -49,9 +49,9 @@ _init_flakey
 
 stat_opt='-c  %n - blocks: %b size: %s inode: %i links: %h'
 
-# Rename wraps 'mv' except that 'rename A/ B/' 
+# Rename wraps 'mv' except that 'rename A/ B/'
 # would replace B, instead of creating A/B
-rename() { 
+rename() {
     [ -d $1 ] && [ -d $2 ] && rm -rf $2
     mv $1 $2
 }
@@ -131,7 +131,7 @@ check_consistency()
 	fi
 }
 
-# Using _scratch_mkfs instead of cleaning up the  working directory,
+# Using _scratch_mkfs instead of cleaning up the working directory,
 # adds about 10 seconds of delay in total for the 37 tests.
 clean_dir()
 {
@@ -203,8 +203,8 @@ do_falloc() {
     esac
 }
 
-do_fsync_check() { 
-    # If file does not exist (i.e. it was removed), fsync 
+do_fsync_check() {
+    # If file does not exist (i.e. it was removed), fsync
     # the parent instead.
 
     if [[ -e "$1" ]]; then
